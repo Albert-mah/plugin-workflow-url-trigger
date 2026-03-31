@@ -9,6 +9,7 @@
 
 import React from 'react';
 import { SendOutlined } from '@ant-design/icons';
+import { Space } from 'antd';
 import { Instruction, WorkflowVariableInput, WorkflowVariableTextArea } from '@nocobase/plugin-workflow/client';
 
 const NAMESPACE = 'workflow-url-trigger';
@@ -20,6 +21,11 @@ export default class extends Instruction {
   description = `{{t("Set the HTTP response for URL trigger workflows: redirect, block, or return data.", { ns: "${NAMESPACE}" })}}`;
   icon = (<SendOutlined />);
   end = true;
+
+  isAvailable({ engine, workflow }) {
+    return workflow.type === 'url' && engine.isWorkflowSync(workflow);
+  }
+
   fieldset = {
     type: {
       type: 'string',
@@ -42,7 +48,9 @@ export default class extends Instruction {
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 1, maxRows: 3 } },
       required: true,
-      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } }],
+      'x-reactions': [
+        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } },
+      ],
     },
     status: {
       type: 'number',
@@ -54,7 +62,9 @@ export default class extends Instruction {
         nullable: false,
       },
       default: 403,
-      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
+      'x-reactions': [
+        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } },
+      ],
     },
     body: {
       type: 'string',
@@ -62,7 +72,9 @@ export default class extends Instruction {
       'x-decorator': 'FormItem',
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
+      'x-reactions': [
+        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] !== "redirect"}}' } } },
+      ],
     },
     data: {
       type: 'string',
@@ -70,12 +82,54 @@ export default class extends Instruction {
       'x-decorator': 'FormItem',
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } }],
+      'x-reactions': [
+        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } },
+      ],
+    },
+    headers: {
+      type: 'array',
+      title: `{{t("Response headers", { ns: "${NAMESPACE}" })}}`,
+      'x-decorator': 'FormItem',
+      'x-component': 'ArrayItems',
+      default: [],
+      items: {
+        type: 'object',
+        'x-component': 'Space',
+        properties: {
+          name: {
+            type: 'string',
+            'x-decorator': 'FormItem',
+            'x-component': 'Input',
+            'x-component-props': { placeholder: 'Header name' },
+            required: true,
+          },
+          value: {
+            type: 'string',
+            'x-decorator': 'FormItem',
+            'x-component': 'Input',
+            'x-component-props': { placeholder: 'Header value' },
+            required: true,
+          },
+          remove: {
+            type: 'void',
+            'x-decorator': 'FormItem',
+            'x-component': 'ArrayItems.Remove',
+          },
+        },
+      },
+      properties: {
+        add: {
+          type: 'void',
+          title: `{{t("Add item", { ns: "${NAMESPACE}" })}}`,
+          'x-component': 'ArrayItems.Addition',
+        },
+      },
     },
   };
 
   components = {
     WorkflowVariableInput,
     WorkflowVariableTextArea,
+    Space,
   };
 }
