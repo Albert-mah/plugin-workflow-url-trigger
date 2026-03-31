@@ -1,3 +1,12 @@
+/**
+ * This file is part of the NocoBase (R) project.
+ * Copyright (c) 2020-2024 NocoBase Co., Ltd.
+ * Authors: NocoBase Team.
+ *
+ * This project is dual-licensed under AGPL-3.0 and NocoBase Commercial License.
+ * For more information, please refer to: https://www.nocobase.com/agreement.
+ */
+
 import { Plugin } from '@nocobase/client';
 import WorkflowPlugin from '@nocobase/plugin-workflow/client';
 
@@ -69,9 +78,7 @@ export default class extends Plugin {
 
   private handleNavigation(pathname: string, router: any) {
     // Client-side pre-matching: check if any pattern matches
-    const hasMatch = this.configs.some((config) =>
-      matchUrl(config.url, config.matchMode, pathname),
-    );
+    const hasMatch = this.configs.some((config) => matchUrl(config.url, config.matchMode, pathname));
 
     if (!hasMatch) {
       return; // No matching trigger — skip backend call entirely
