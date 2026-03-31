@@ -8,16 +8,14 @@ A NocoBase workflow trigger plugin that fires when a user accesses a URL matchin
 - **Sync mode** — Intercept the request, run the workflow, then redirect / block / passthrough based on the result
 - **Async mode** — Let the request through, trigger the workflow in the background
 - **HTTP method filtering** — Match only GET, POST, etc., or leave empty to match all
+- **Client-side route guard** — Intercepts SPA navigation with local pattern pre-matching (no backend call unless a pattern matches)
 
-## Trigger Variables
+## Installation
 
-| Variable | Description |
-|----------|-------------|
-| `url` | Matched URL path |
-| `query` | Parsed query parameters |
-| `method` | HTTP method (GET, POST, etc.) |
-| `user` | Current authenticated user |
-| `roleName` | Current user role |
+```bash
+yarn nocobase pm add @nocobase/plugin-workflow-url-trigger
+yarn nocobase pm enable @nocobase/plugin-workflow-url-trigger
+```
 
 ## Sync Mode — Controlling the Response
 
@@ -29,10 +27,3 @@ In sync mode, the workflow's **Output node** result determines the HTTP response
 | `{ "url": "/login" }` | 302 redirect |
 | `{ "status": 403, "body": "Forbidden" }` | Custom response (block) |
 | _(empty / no Output node)_ | Passthrough — request continues normally |
-
-## Installation
-
-```bash
-yarn nocobase pm add @nocobase/plugin-workflow-url-trigger
-yarn nocobase pm enable @nocobase/plugin-workflow-url-trigger
-```
