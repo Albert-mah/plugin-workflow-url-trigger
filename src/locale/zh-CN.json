@@ -1,0 +1,15 @@
+{
+  "URL event": "URL 事件",
+  "Triggered when a user accesses a URL matching the configured pattern. In sync mode the workflow can intercept and redirect; in async mode it fires without blocking.": "当用户访问匹配配置模式的 URL 时触发。同步模式可拦截并重定向；异步模式触发后不阻塞。",
+  "URL pattern": "URL 匹配模式",
+  "Glob examples: /admin/*, /api/users/**. Regex examples: ^/admin/(settings|users)": "Glob 示例：/admin/*、/api/users/**。正则示例：^/admin/(settings|users)",
+  "Match mode": "匹配方式",
+  "HTTP methods": "HTTP 方法",
+  "Leave empty to match all methods": "留空则匹配所有方法",
+  "URL": "URL",
+  "URL path": "URL 路径",
+  "Query parameters": "查询参数",
+  "HTTP method": "HTTP 方法",
+  "Current user": "当前用户",
+  "Current role": "当前角色"
+}

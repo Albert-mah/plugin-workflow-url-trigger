@@ -1,0 +1,15 @@
+{
+  "URL event": "URL event",
+  "Triggered when a user accesses a URL matching the configured pattern. In sync mode the workflow can intercept and redirect; in async mode it fires without blocking.": "Triggered when a user accesses a URL matching the configured pattern. In sync mode the workflow can intercept and redirect; in async mode it fires without blocking.",
+  "URL pattern": "URL pattern",
+  "Glob examples: /admin/*, /api/users/**. Regex examples: ^/admin/(settings|users)": "Glob examples: /admin/*, /api/users/**. Regex examples: ^/admin/(settings|users)",
+  "Match mode": "Match mode",
+  "HTTP methods": "HTTP methods",
+  "Leave empty to match all methods": "Leave empty to match all methods",
+  "URL": "URL",
+  "URL path": "URL path",
+  "Query parameters": "Query parameters",
+  "HTTP method": "HTTP method",
+  "Current user": "Current user",
+  "Current role": "Current role"
+}
