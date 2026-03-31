@@ -11,5 +11,15 @@
   "Query parameters": "查询参数",
   "HTTP method": "HTTP 方法",
   "Current user": "当前用户",
-  "Current role": "当前角色"
+  "Current role": "当前角色",
+  "HTTP Response": "HTTP 响应",
+  "Set the HTTP response for URL trigger workflows: redirect, block, or return data.": "设置 URL 触发器工作流的 HTTP 响应：重定向、拦截或返回数据。",
+  "Response type": "响应类型",
+  "Redirect": "重定向",
+  "Block": "拦截",
+  "Data": "数据",
+  "Redirect URL": "重定向 URL",
+  "Status code": "状态码",
+  "Response body": "响应内容",
+  "Response data": "响应数据"
 }
