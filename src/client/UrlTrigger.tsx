@@ -23,6 +23,9 @@ function useVariables(config, options) {
   const langUrl = useLang('URL path');
   const langQuery = useLang('Query parameters');
   const langMethod = useLang('HTTP method');
+  const langHeaders = useLang('Request headers');
+  const langBody = useLang('Request body');
+  const langParams = useLang('Path params');
   const langUser = useLang('Current user');
   const langRole = useLang('Current role');
 
@@ -41,6 +44,21 @@ function useVariables(config, options) {
       key: 'method',
       value: 'method',
       label: langMethod,
+    },
+    {
+      key: 'headers',
+      value: 'headers',
+      label: langHeaders,
+    },
+    {
+      key: 'body',
+      value: 'body',
+      label: langBody,
+    },
+    {
+      key: 'params',
+      value: 'params',
+      label: langParams,
     },
     ...getCollectionFieldOptions({
       appends: ['user'],

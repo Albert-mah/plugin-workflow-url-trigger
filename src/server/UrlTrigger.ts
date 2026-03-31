@@ -169,10 +169,16 @@ export default class UrlTrigger extends Trigger {
         user = currentUser;
       }
     }
+    // Pick safe headers (exclude internal/auth ones)
+    const { authorization, cookie, ...safeHeaders } = ctx.headers ?? {};
+
     return {
       url: ctx.path,
       query: ctx.query ?? {},
       method: ctx.method,
+      headers: safeHeaders,
+      body: ctx.request.body ?? null,
+      params: ctx.params ?? {},
       user,
       roleName: currentRole ?? null,
     };
