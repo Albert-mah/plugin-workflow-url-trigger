@@ -11,5 +11,15 @@
   "Query parameters": "Query parameters",
   "HTTP method": "HTTP method",
   "Current user": "Current user",
-  "Current role": "Current role"
+  "Current role": "Current role",
+  "HTTP Response": "HTTP Response",
+  "Set the HTTP response for URL trigger workflows: redirect, block, or return data.": "Set the HTTP response for URL trigger workflows: redirect, block, or return data.",
+  "Response type": "Response type",
+  "Redirect": "Redirect",
+  "Block": "Block",
+  "Data": "Data",
+  "Redirect URL": "Redirect URL",
+  "Status code": "Status code",
+  "Response body": "Response body",
+  "Response data": "Response data"
 }

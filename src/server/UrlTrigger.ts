@@ -47,6 +47,11 @@ export default class UrlTrigger extends Trigger {
           const { execution, lastSavedJob } = processor;
 
           if (execution.status === EXECUTION_STATUS.RESOLVED) {
+            // If a response instruction (url-response) already set the response, stop here
+            if (ctx.headerSent || ctx.status !== 404) {
+              return;
+            }
+            // Fallback: check execution.output / lastSavedJob.result for backward compat with Output node
             const output = execution.output ?? lastSavedJob?.result;
             if (output) {
               if (typeof output === 'string') {

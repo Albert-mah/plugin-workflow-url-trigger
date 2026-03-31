@@ -2,12 +2,14 @@ import { Plugin } from '@nocobase/server';
 import WorkflowPlugin from '@nocobase/plugin-workflow';
 
 import UrlTrigger from './UrlTrigger';
+import ResponseInstruction from './ResponseInstruction';
 
 export default class extends Plugin {
   async load() {
     const workflowPlugin = this.app.pm.get(WorkflowPlugin) as WorkflowPlugin;
     const urlTrigger = new UrlTrigger(workflowPlugin);
     workflowPlugin.registerTrigger('url', urlTrigger);
+    workflowPlugin.registerInstruction('url-response', ResponseInstruction);
 
     this.app.resourceManager.define({
       name: 'urlTrigger',
