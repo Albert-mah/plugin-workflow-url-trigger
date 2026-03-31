@@ -1,3 +1,12 @@
+/**
+ * This file is part of the NocoBase (R) project.
+ * Copyright (c) 2020-2024 NocoBase Co., Ltd.
+ * Authors: NocoBase Team.
+ *
+ * This project is dual-licensed under AGPL-3.0 and NocoBase Commercial License.
+ * For more information, please refer to: https://www.nocobase.com/agreement.
+ */
+
 import { Context } from '@nocobase/actions';
 import WorkflowPlugin, { Trigger, WorkflowModel, EXECUTION_STATUS } from '@nocobase/plugin-workflow';
 import { compilePattern } from '../common/matchUrl';
@@ -169,16 +178,14 @@ export default class UrlTrigger extends Trigger {
         user = currentUser;
       }
     }
-    // Pick safe headers (exclude internal/auth ones)
-    const { authorization, cookie, ...safeHeaders } = ctx.headers ?? {};
+    const { authorization, cookie, ...headers } = ctx.headers ?? {};
 
     return {
       url: ctx.path,
       query: ctx.query ?? {},
       method: ctx.method,
-      headers: safeHeaders,
+      headers,
       body: ctx.request.body ?? null,
-      params: ctx.params ?? {},
       user,
       roleName: currentRole ?? null,
     };

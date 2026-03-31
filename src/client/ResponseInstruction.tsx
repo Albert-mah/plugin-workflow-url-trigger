@@ -1,3 +1,12 @@
+/**
+ * This file is part of the NocoBase (R) project.
+ * Copyright (c) 2020-2024 NocoBase Co., Ltd.
+ * Authors: NocoBase Team.
+ *
+ * This project is dual-licensed under AGPL-3.0 and NocoBase Commercial License.
+ * For more information, please refer to: https://www.nocobase.com/agreement.
+ */
+
 import React from 'react';
 import { SendOutlined } from '@ant-design/icons';
 import { Instruction, WorkflowVariableInput, WorkflowVariableTextArea } from '@nocobase/plugin-workflow/client';
@@ -33,9 +42,7 @@ export default class extends Instruction {
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 1, maxRows: 3 } },
       required: true,
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } }],
     },
     status: {
       type: 'number',
@@ -47,9 +54,7 @@ export default class extends Instruction {
         nullable: false,
       },
       default: 403,
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
     },
     body: {
       type: 'string',
@@ -57,9 +62,7 @@ export default class extends Instruction {
       'x-decorator': 'FormItem',
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
     },
     data: {
       type: 'string',
@@ -67,9 +70,7 @@ export default class extends Instruction {
       'x-decorator': 'FormItem',
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } }],
     },
   };
 
