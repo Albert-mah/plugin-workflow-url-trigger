@@ -1,5 +1,12 @@
-import { Trigger, useWorkflowAnyExecuted } from '@nocobase/plugin-workflow/client';
-import { NAMESPACE } from '../locale';
+import { useCompile, RemoteSelect } from '@nocobase/client';
+import {
+  Trigger,
+  useWorkflowAnyExecuted,
+  getCollectionFieldOptions,
+  useGetDataSourceCollectionManager,
+  WorkflowVariableWrapper,
+} from '@nocobase/plugin-workflow/client';
+import { NAMESPACE, useLang } from '../locale';
 
 const HTTP_METHODS = [
   { label: 'GET', value: 'GET' },
@@ -8,6 +15,58 @@ const HTTP_METHODS = [
   { label: 'PATCH', value: 'PATCH' },
   { label: 'DELETE', value: 'DELETE' },
 ];
+
+function useVariables(config, options) {
+  const compile = useCompile();
+  const mainCollectionManager = useGetDataSourceCollectionManager();
+
+  const langUrl = useLang('URL path');
+  const langQuery = useLang('Query parameters');
+  const langMethod = useLang('HTTP method');
+  const langUser = useLang('Current user');
+  const langRole = useLang('Current role');
+
+  return [
+    {
+      key: 'url',
+      value: 'url',
+      label: langUrl,
+    },
+    {
+      key: 'query',
+      value: 'query',
+      label: langQuery,
+    },
+    {
+      key: 'method',
+      value: 'method',
+      label: langMethod,
+    },
+    ...getCollectionFieldOptions({
+      appends: ['user'],
+      ...options,
+      fields: [
+        {
+          collectionName: 'users',
+          name: 'user',
+          type: 'hasOne',
+          target: 'users',
+          uiSchema: {
+            title: langUser,
+          },
+        },
+        {
+          name: 'roleName',
+          uiSchema: {
+            title: langRole,
+          },
+        },
+      ],
+      compile,
+      collectionManager: mainCollectionManager,
+    }),
+  ];
+}
 
 export default class extends Trigger {
   title = `{{t("URL event", { ns: "${NAMESPACE}" })}}`;
@@ -69,37 +128,7 @@ export default class extends Trigger {
     useWorkflowAnyExecuted,
   };
 
-  useVariables(config, options) {
-    return [
-      {
-        key: 'url',
-        value: 'url',
-        label: `{{t("URL path", { ns: "${NAMESPACE}" })}}`,
-      },
-      {
-        key: 'query',
-        value: 'query',
-        label: `{{t("Query parameters", { ns: "${NAMESPACE}" })}}`,
-        children: [],
-      },
-      {
-        key: 'method',
-        value: 'method',
-        label: `{{t("HTTP method", { ns: "${NAMESPACE}" })}}`,
-      },
-      {
-        key: 'user',
-        value: 'user',
-        label: `{{t("Current user", { ns: "${NAMESPACE}" })}}`,
-        children: [],
-      },
-      {
-        key: 'roleName',
-        value: 'roleName',
-        label: `{{t("Current role", { ns: "${NAMESPACE}" })}}`,
-      },
-    ];
-  }
+  useVariables = useVariables;
 
   validate(config) {
     return !!config?.url;

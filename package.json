@@ -13,15 +13,12 @@
     "react-i18next": "^11.15.1"
   },
   "peerDependencies": {
+    "@nocobase/actions": "2.x",
     "@nocobase/client": "2.x",
     "@nocobase/plugin-workflow": ">=0.17.0-alpha.3",
     "@nocobase/server": "2.x"
   },
   "keywords": [
     "Workflow"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Albert-mah/plugin-workflow-url-trigger.git"
-  }
+  ]
 }

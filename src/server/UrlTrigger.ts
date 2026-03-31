@@ -1,128 +1,125 @@
 import { Context } from '@nocobase/actions';
-import WorkflowPlugin, { Trigger, WorkflowModel, EXECUTION_STATUS, toJSON } from '@nocobase/plugin-workflow';
-
-/**
- * Convert a glob pattern to a RegExp.
- *
- *   /admin/*      -> matches one path segment   (e.g. /admin/users)
- *   /admin/**     -> matches any depth           (e.g. /admin/a/b/c)
- *   /page/:id     -> named param style           (e.g. /page/123)
- */
-function globToRegex(pattern: string): RegExp {
-  const escaped = pattern
-    .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-    .replace(/\*\*/g, '\0GLOBSTAR\0')
-    .replace(/\*/g, '[^/]*')
-    .replace(/\0GLOBSTAR\0/g, '.*');
-  return new RegExp(`^${escaped}$`);
-}
-
-function matchUrl(pattern: string, mode: string, url: string): boolean {
-  if (mode === 'regex') {
-    return new RegExp(pattern).test(url);
-  }
-  // default: glob
-  return globToRegex(pattern).test(url);
-}
+import WorkflowPlugin, { Trigger, WorkflowModel, EXECUTION_STATUS } from '@nocobase/plugin-workflow';
+import { compilePattern } from '../common/matchUrl';
 
 export default class UrlTrigger extends Trigger {
   static TYPE = 'url';
+
+  // Pre-compiled regex cache: workflowId → RegExp
+  private regexCache = new Map<number, RegExp>();
 
   constructor(workflow: WorkflowPlugin) {
     super(workflow);
 
     const self = this;
 
-    // Register a Koa-level middleware to intercept every incoming request.
-    // The middleware itself is lightweight — it only does real work when
-    // there are enabled workflows of type "url" whose pattern matches.
     workflow.app.use(async function urlTriggerMiddleware(ctx: Context, next) {
-      // Skip non-page requests early (static assets, healthcheck, etc.)
-      const path: string = ctx.path;
-
-      const matched = self.getMatchingWorkflows(path, ctx.method);
-      if (!matched.length) {
-        return next();
-      }
-
-      const syncWorkflows: Array<[WorkflowModel, any]> = [];
-      const asyncWorkflows: Array<[WorkflowModel, any]> = [];
-
-      const triggerContext = self.buildContext(ctx);
-
-      for (const wf of matched) {
-        if (self.workflow.isWorkflowSync(wf)) {
-          syncWorkflows.push([wf, triggerContext]);
-        } else {
-          asyncWorkflows.push([wf, triggerContext]);
-        }
-      }
-
-      // --- Sync workflows: run before the request proceeds ---
-      for (const [wf, context] of syncWorkflows) {
-        const processor = await self.workflow.trigger(wf, context, {
-          httpContext: ctx,
-        });
-
-        if (!processor) {
-          ctx.status = 500;
-          ctx.body = { error: 'Workflow trigger failed' };
-          return;
+      try {
+        const matched = self.getMatchingWorkflows(ctx.path, ctx.method);
+        if (!matched.length) {
+          return next();
         }
 
-        const { execution, lastSavedJob } = processor;
+        const syncWorkflows: Array<[WorkflowModel, any]> = [];
+        const asyncWorkflows: Array<[WorkflowModel, any]> = [];
 
-        if (execution.status === EXECUTION_STATUS.RESOLVED) {
-          // Check execution.output (set by Output node) first, then lastSavedJob.result
-          const output = execution.output ?? lastSavedJob?.result;
-          if (output) {
-            // String value → treat as redirect URL directly
-            if (typeof output === 'string') {
-              ctx.redirect(output);
-              return;
-            }
-            // Object with url → redirect
-            if (typeof output === 'object' && output.url) {
-              ctx.redirect(output.url);
-              return;
-            }
-            // Object with status → custom response (block / custom page)
-            if (typeof output === 'object' && output.status) {
-              ctx.status = output.status;
-              ctx.body = output.body ?? '';
-              return;
-            }
+        const triggerContext = self.buildContext(ctx);
+
+        for (const wf of matched) {
+          if (self.workflow.isWorkflowSync(wf)) {
+            syncWorkflows.push([wf, triggerContext]);
+          } else {
+            asyncWorkflows.push([wf, triggerContext]);
           }
-          // No special action — passthrough to next middleware
-          continue;
         }
 
-        if (execution.status < EXECUTION_STATUS.STARTED) {
-          // Workflow rejected / error
-          ctx.status = 403;
-          ctx.body = { error: 'Access denied by workflow' };
+        for (const [wf, context] of syncWorkflows) {
+          const processor = await self.workflow.trigger(wf, context, {
+            httpContext: ctx,
+          });
+
+          if (!processor) {
+            ctx.status = 500;
+            ctx.body = { error: 'Workflow trigger failed' };
+            return;
+          }
+
+          const { execution, lastSavedJob } = processor;
+
+          if (execution.status === EXECUTION_STATUS.RESOLVED) {
+            const output = execution.output ?? lastSavedJob?.result;
+            if (output) {
+              if (typeof output === 'string') {
+                ctx.redirect(output);
+                return;
+              }
+              if (typeof output === 'object' && output.url) {
+                ctx.redirect(output.url);
+                return;
+              }
+              if (typeof output === 'object' && output.status) {
+                ctx.status = output.status;
+                ctx.body = output.body ?? '';
+                return;
+              }
+            }
+            continue;
+          }
+
+          if (execution.status < EXECUTION_STATUS.STARTED) {
+            ctx.status = 403;
+            ctx.body = { error: 'Access denied by workflow' };
+            return;
+          }
+
+          ctx.status = 500;
+          ctx.body = { error: 'Workflow execution did not complete' };
           return;
         }
 
-        // Pending / unknown — should not happen for sync
-        ctx.status = 500;
-        ctx.body = { error: 'Workflow execution did not complete' };
-        return;
-      }
+        await next();
 
-      // --- Let the request through ---
-      await next();
-
-      // --- Async workflows: fire after response ---
-      for (const [wf, context] of asyncWorkflows) {
-        self.workflow.trigger(wf, context);
+        for (const [wf, context] of asyncWorkflows) {
+          self.workflow.trigger(wf, context);
+        }
+      } catch (err) {
+        ctx.log?.error?.('[workflow-url-trigger] middleware error:', err);
+        return next();
       }
     });
   }
 
+  on(workflow: WorkflowModel) {
+    const { url: pattern, matchMode = 'glob' } = workflow.config ?? {};
+    if (pattern) {
+      const regex = compilePattern(pattern, matchMode);
+      if (regex) {
+        this.regexCache.set(workflow.id, regex);
+      }
+    }
+  }
+
+  off(workflow: WorkflowModel) {
+    this.regexCache.delete(workflow.id);
+  }
+
   /**
-   * Find all enabled "url" workflows whose pattern matches the given path.
+   * Return all enabled URL trigger configs for client-side pre-matching.
    */
+  getConfigs(): Array<{ url: string; matchMode: string; sync: boolean }> {
+    const configs: Array<{ url: string; matchMode: string; sync: boolean }> = [];
+    for (const wf of this.workflow.enabledCache.values()) {
+      if (wf.type !== UrlTrigger.TYPE) {
+        continue;
+      }
+      const { url, matchMode = 'glob' } = wf.config ?? {};
+      if (url) {
+        configs.push({ url, matchMode, sync: this.workflow.isWorkflowSync(wf) });
+      }
+    }
+    return configs;
+  }
+
   private getMatchingWorkflows(path: string, method: string): WorkflowModel[] {
     const results: WorkflowModel[] = [];
 
@@ -132,17 +129,24 @@ export default class UrlTrigger extends Trigger {
       }
 
       const { url: pattern, matchMode = 'glob', methods = [] } = wf.config ?? {};
-
       if (!pattern) {
         continue;
       }
 
-      // Check HTTP method (empty array = match all)
       if (methods.length && !methods.includes(method.toUpperCase())) {
         continue;
       }
 
-      if (matchUrl(pattern, matchMode, path)) {
+      let regex = this.regexCache.get(wf.id);
+      if (!regex) {
+        regex = compilePattern(pattern, matchMode);
+        if (!regex) {
+          continue;
+        }
+        this.regexCache.set(wf.id, regex);
+      }
+
+      if (regex.test(path)) {
         results.push(wf);
       }
     }
@@ -150,23 +154,75 @@ export default class UrlTrigger extends Trigger {
     return results;
   }
 
-  /**
-   * Build the trigger context that workflow nodes can access via variables.
-   */
   private buildContext(ctx: Context) {
     const { currentUser, currentRole } = ctx.state ?? {};
+    let user = null;
+    if (currentUser) {
+      try {
+        user = typeof currentUser.toJSON === 'function' ? currentUser.toJSON() : currentUser;
+      } catch {
+        user = currentUser;
+      }
+    }
     return {
       url: ctx.path,
       query: ctx.query ?? {},
       method: ctx.method,
-      user: currentUser ? toJSON(currentUser) : null,
+      user,
       roleName: currentRole ?? null,
     };
   }
 
-  /**
-   * Manual / API execution (for testing workflows).
-   */
+  async evaluateUrl(
+    path: string,
+    method: string,
+    ctx: Context,
+  ): Promise<{ action: string; url?: string; status?: number; body?: any }> {
+    const matched = this.getMatchingWorkflows(path, method);
+    const syncWorkflows = matched.filter((wf) => this.workflow.isWorkflowSync(wf));
+    const asyncWorkflows = matched.filter((wf) => !this.workflow.isWorkflowSync(wf));
+
+    const triggerContext = this.buildContext(ctx);
+    triggerContext.url = path;
+
+    for (const wf of syncWorkflows) {
+      const processor = await this.workflow.trigger(wf, triggerContext, { httpContext: ctx });
+      if (!processor) {
+        return { action: 'block', status: 500, body: 'Workflow trigger failed' };
+      }
+
+      const { execution, lastSavedJob } = processor;
+
+      if (execution.status === EXECUTION_STATUS.RESOLVED) {
+        const output = execution.output ?? lastSavedJob?.result;
+        if (output) {
+          if (typeof output === 'string') {
+            return { action: 'redirect', url: output };
+          }
+          if (typeof output === 'object' && output.url) {
+            return { action: 'redirect', url: output.url };
+          }
+          if (typeof output === 'object' && output.status) {
+            return { action: 'block', status: output.status, body: output.body };
+          }
+        }
+        continue;
+      }
+
+      if (execution.status < EXECUTION_STATUS.STARTED) {
+        return { action: 'block', status: 403, body: 'Access denied by workflow' };
+      }
+
+      return { action: 'block', status: 500, body: 'Workflow execution did not complete' };
+    }
+
+    for (const wf of asyncWorkflows) {
+      this.workflow.trigger(wf, triggerContext);
+    }
+
+    return { action: 'passthrough' };
+  }
+
   async execute(workflow: WorkflowModel, values: any, options: any) {
     return this.workflow.trigger(workflow, values, options);
   }
