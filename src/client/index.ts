@@ -20,7 +20,7 @@ interface TriggerConfig {
   sync: boolean;
 }
 
-export default class extends Plugin {
+export default class PluginWorkflowUrlTriggerClient extends Plugin {
   private unsubscribe: (() => void) | null = null;
   private configs: TriggerConfig[] = [];
 
