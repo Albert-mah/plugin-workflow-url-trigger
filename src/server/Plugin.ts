@@ -32,6 +32,14 @@ export default class extends Plugin {
           },
         },
         // Executes matching sync workflows for a given path and returns the result.
+        // Returns whether the Koa middleware is registered.
+        // If false, the app needs a restart for URL triggers to work.
+        status: {
+          handler: async (ctx, next) => {
+            ctx.body = { middlewareRegistered: urlTrigger.middlewareRegistered };
+            return next();
+          },
+        },
         check: {
           handler: async (ctx, next) => {
             const { path } = ctx.action.params?.values ?? {};
@@ -49,5 +57,6 @@ export default class extends Plugin {
 
     this.app.acl.allow('urlTrigger', 'configs', 'loggedIn');
     this.app.acl.allow('urlTrigger', 'check', 'loggedIn');
+    this.app.acl.allow('urlTrigger', 'status', 'loggedIn');
   }
 }

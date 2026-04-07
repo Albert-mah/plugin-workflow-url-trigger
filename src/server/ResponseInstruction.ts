@@ -26,9 +26,7 @@ export default class ResponseInstruction extends Instruction {
 
       const responseResult: any = {
         type,
-        headers: Array.isArray(headers)
-          ? headers.reduce((pre, h) => ({ ...pre, [h.name]: h.value }), {})
-          : {},
+        headers: Array.isArray(headers) ? headers.reduce((pre, h) => ({ ...pre, [h.name]: h.value }), {}) : {},
       };
 
       if (type === 'redirect') {

@@ -12,7 +12,7 @@ import WorkflowPlugin from '@nocobase/plugin-workflow/client';
 
 import UrlTrigger from './UrlTrigger';
 import ResponseInstruction from './ResponseInstruction';
-import { matchUrl } from '../common/matchUrl';
+import { matchUrl } from './matchUrl';
 
 interface TriggerConfig {
   url: string;

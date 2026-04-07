@@ -7,9 +7,24 @@
  * For more information, please refer to: https://www.nocobase.com/agreement.
  */
 
+import { get } from 'lodash';
 import { Context } from '@nocobase/actions';
 import WorkflowPlugin, { Trigger, WorkflowModel, EXECUTION_STATUS } from '@nocobase/plugin-workflow';
 import { compilePattern } from '../common/matchUrl';
+
+/**
+ * Extract named variables from an object using user-defined key mappings.
+ * Same pattern as webhook plugin's getVariable().
+ */
+function getVariable(obj: any, keys: Array<{ key: string; alias?: string; _var?: string }> = []) {
+  if (typeof obj !== 'object' || !Array.isArray(keys) || !keys.length) {
+    return obj ?? {};
+  }
+  const result = keys.reduce((pre, { key, _var }) => {
+    return { ...pre, [_var || key]: get(obj, key) };
+  }, {});
+  return { ...result, ...obj };
+}
 
 export default class UrlTrigger extends Trigger {
   static TYPE = 'url';
@@ -17,9 +32,13 @@ export default class UrlTrigger extends Trigger {
   // Pre-compiled regex cache: workflowId → RegExp
   private regexCache = new Map<number, RegExp>();
 
+  // Track whether the Koa middleware was registered in this process
+  public middlewareRegistered = false;
+
   constructor(workflow: WorkflowPlugin) {
     super(workflow);
 
+    this.middlewareRegistered = true;
     const self = this;
 
     workflow.app.use(async function urlTriggerMiddleware(ctx: Context, next) {
@@ -29,20 +48,19 @@ export default class UrlTrigger extends Trigger {
           return next();
         }
 
-        const syncWorkflows: Array<[WorkflowModel, any]> = [];
-        const asyncWorkflows: Array<[WorkflowModel, any]> = [];
-
-        const triggerContext = self.buildContext(ctx);
+        const syncWorkflows: WorkflowModel[] = [];
+        const asyncWorkflows: WorkflowModel[] = [];
 
         for (const wf of matched) {
           if (self.workflow.isWorkflowSync(wf)) {
-            syncWorkflows.push([wf, triggerContext]);
+            syncWorkflows.push(wf);
           } else {
-            asyncWorkflows.push([wf, triggerContext]);
+            asyncWorkflows.push(wf);
           }
         }
 
-        for (const [wf, context] of syncWorkflows) {
+        for (const wf of syncWorkflows) {
+          const context = self.buildContextForWorkflow(ctx, wf);
           const processor = await self.workflow.trigger(wf, context, {
             httpContext: ctx,
           });
@@ -71,7 +89,8 @@ export default class UrlTrigger extends Trigger {
 
         await next();
 
-        for (const [wf, context] of asyncWorkflows) {
+        for (const wf of asyncWorkflows) {
+          const context = self.buildContextForWorkflow(ctx, wf);
           self.workflow.trigger(wf, context);
         }
       } catch (err) {
@@ -220,6 +239,21 @@ export default class UrlTrigger extends Trigger {
       user,
       roleName: currentRole ?? null,
     };
+  }
+
+  /**
+   * Build context with user-defined variable mappings from workflow config.
+   */
+  private buildContextForWorkflow(ctx: Context, wf: WorkflowModel) {
+    const base = this.buildContext(ctx);
+    const { request } = wf.config ?? {};
+    if (request?.query?.length) {
+      base.query = getVariable(base.query, request.query);
+    }
+    if (request?.body?.length) {
+      base.body = getVariable(base.body, request.body);
+    }
+    return base;
   }
 
   async evaluateUrl(
