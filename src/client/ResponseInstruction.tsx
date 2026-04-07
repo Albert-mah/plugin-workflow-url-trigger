@@ -10,7 +10,12 @@
 import React from 'react';
 import { SendOutlined } from '@ant-design/icons';
 import { Space } from 'antd';
-import { Instruction, WorkflowVariableInput, WorkflowVariableTextArea } from '@nocobase/plugin-workflow/client';
+import {
+  Instruction,
+  WorkflowVariableInput,
+  WorkflowVariableTextArea,
+  WorkflowVariableJSON,
+} from '@nocobase/plugin-workflow/client';
 
 const NAMESPACE = 'workflow-url-trigger';
 
@@ -48,9 +53,7 @@ export default class extends Instruction {
       'x-component': 'WorkflowVariableTextArea',
       'x-component-props': { changeOnSelect: true, autoSize: { minRows: 1, maxRows: 3 } },
       required: true,
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "redirect"}}' } } }],
     },
     status: {
       type: 'number',
@@ -62,29 +65,31 @@ export default class extends Instruction {
         nullable: false,
       },
       default: 403,
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } },
-      ],
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
     },
     body: {
-      type: 'string',
+      type: 'object',
       title: `{{t("Response body", { ns: "${NAMESPACE}" })}}`,
       'x-decorator': 'FormItem',
-      'x-component': 'WorkflowVariableTextArea',
-      'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] !== "redirect"}}' } } },
-      ],
+      'x-component': 'WorkflowVariableJSON',
+      'x-component-props': {
+        changeOnSelect: true,
+        autoSize: { minRows: 6 },
+        placeholder: `{{t("Input response data", { ns: "${NAMESPACE}" })}}`,
+      },
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "block"}}' } } }],
     },
     data: {
-      type: 'string',
+      type: 'object',
       title: `{{t("Response data", { ns: "${NAMESPACE}" })}}`,
       'x-decorator': 'FormItem',
-      'x-component': 'WorkflowVariableTextArea',
-      'x-component-props': { changeOnSelect: true, autoSize: { minRows: 2, maxRows: 6 } },
-      'x-reactions': [
-        { dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } },
-      ],
+      'x-component': 'WorkflowVariableJSON',
+      'x-component-props': {
+        changeOnSelect: true,
+        autoSize: { minRows: 6 },
+        placeholder: `{{t("Input response data", { ns: "${NAMESPACE}" })}}`,
+      },
+      'x-reactions': [{ dependencies: ['type'], fulfill: { state: { visible: '{{$deps[0] === "data"}}' } } }],
     },
     headers: {
       type: 'array',
@@ -130,6 +135,7 @@ export default class extends Instruction {
   components = {
     WorkflowVariableInput,
     WorkflowVariableTextArea,
+    WorkflowVariableJSON,
     Space,
   };
 }

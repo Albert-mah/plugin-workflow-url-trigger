@@ -26,5 +26,17 @@
   "Response body": "响应内容",
   "Response data": "响应数据",
   "Response headers": "响应头",
-  "Add item": "添加"
+  "Add item": "添加",
+  "Input response data": "输入响应数据",
+  "Request data parsing": "请求数据解析",
+  "Define expected parameters so they appear as selectable variables in downstream nodes.": "预定义期望的参数，使其在后续节点中显示为可选变量。",
+  "Sample input": "示例输入",
+  "Key path": "键路径",
+  "Alias": "别名",
+  "Parse": "解析",
+  "Clear": "清空",
+  "Clear all items?": "确定清空所有项？",
+  "Paste a sample URL or query string, e.g. ?enc=xxx&type=login": "粘贴示例 URL 或查询字符串，如 ?enc=xxx&type=login",
+  "Paste sample JSON body, e.g. {\"userId\": 1, \"action\": \"login\"}": "粘贴示例 JSON 请求体，如 {\"userId\": 1, \"action\": \"login\"}",
+  "URL trigger middleware is not active. Please restart the application for URL interception to take effect.": "URL 触发器中间件未激活。请重启应用后 URL 拦截才会生效。"
 }

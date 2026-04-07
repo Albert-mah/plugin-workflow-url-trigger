@@ -26,5 +26,17 @@
   "Response body": "Response body",
   "Response data": "Response data",
   "Response headers": "Response headers",
-  "Add item": "Add item"
+  "Add item": "Add item",
+  "Input response data": "Input response data",
+  "Request data parsing": "Request data parsing",
+  "Define expected parameters so they appear as selectable variables in downstream nodes.": "Define expected parameters so they appear as selectable variables in downstream nodes.",
+  "Sample input": "Sample input",
+  "Key path": "Key path",
+  "Alias": "Alias",
+  "Parse": "Parse",
+  "Clear": "Clear",
+  "Clear all items?": "Clear all items?",
+  "Paste a sample URL or query string, e.g. ?enc=xxx&type=login": "Paste a sample URL or query string, e.g. ?enc=xxx&type=login",
+  "Paste sample JSON body, e.g. {\"userId\": 1, \"action\": \"login\"}": "Paste sample JSON body, e.g. {\"userId\": 1, \"action\": \"login\"}",
+  "URL trigger middleware is not active. Please restart the application for URL interception to take effect.": "URL trigger middleware is not active. Please restart the application for URL interception to take effect."
 }

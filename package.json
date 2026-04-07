@@ -4,7 +4,7 @@
   "displayName.zh-CN": "工作流：URL 事件",
   "description": "Triggered when a user accesses a URL matching the configured pattern. Supports sync mode (intercept and redirect) and async mode (fire and forget).",
   "description.zh-CN": "当用户访问匹配配置模式的 URL 时触发。支持同步模式（拦截并重定向）和异步模式（触发后不阻塞）。",
-  "version": "0.1.0",
+  "version": "2.1.0-beta.11",
   "license": "Apache-2.0",
   "main": "./dist/server/index.js",
   "devDependencies": {
