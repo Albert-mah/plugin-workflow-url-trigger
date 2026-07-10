@@ -16,12 +16,12 @@ import { compilePattern } from '../common/matchUrl';
  * Extract named variables from an object using user-defined key mappings.
  * Same pattern as webhook plugin's getVariable().
  */
-function getVariable(obj: any, keys: Array<{ key: string; alias?: string; _var?: string }> = []) {
+function getVariable(obj: any, keys: Array<{ key: string; alias?: string }> = []) {
   if (typeof obj !== 'object' || !Array.isArray(keys) || !keys.length) {
     return obj ?? {};
   }
-  const result = keys.reduce((pre, { key, _var }) => {
-    return { ...pre, [_var || key]: get(obj, key) };
+  const result = keys.reduce((pre, { key }) => {
+    return { ...pre, [key]: get(obj, key) };
   }, {});
   return { ...result, ...obj };
 }
@@ -83,7 +83,12 @@ export default class UrlTrigger extends Trigger {
             return;
           }
           ctx.status = response.status;
-          ctx.body = response.body ?? '';
+          // Bypass NB dataWrapping middleware: it wraps string bodies into
+          // {data: ...} JSON, breaking text/html responses for sync workflows.
+          // Buffer bodies are explicitly skipped by dataWrapping, so wrap any
+          // string body into a Buffer here.
+          const body = response.body ?? '';
+          ctx.body = typeof body === 'string' ? Buffer.from(body) : body;
           return;
         }
 

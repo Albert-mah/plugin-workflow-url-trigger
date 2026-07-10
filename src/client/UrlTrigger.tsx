@@ -176,8 +176,8 @@ function useVariables(config, options) {
     return (items || []).map((item) => ({
       isLeaf: true,
       label: item.alias || item.key,
-      value: item._var || item.key,
-      key: item._var || item.key,
+      value: item.key,
+      key: item.key,
     }));
   };
 

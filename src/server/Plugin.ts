@@ -55,7 +55,14 @@ export default class extends Plugin {
       },
     });
 
-    this.app.acl.allow('urlTrigger', 'configs', 'loggedIn');
+    // IMPORTANT: configs MUST be 'public', NOT 'loggedIn'.
+    // The client-side route guard calls configs on every page load, including
+    // before the user is authenticated. If this returns 401, NocoBase's global
+    // axios interceptor treats it as "session expired", calls auth:signOut which
+    // blocks the current token via jwt.block(), and clears localStorage.
+    // This causes all subsequent requests to fail with BLOCKED_TOKEN.
+    // configs only returns URL patterns (no sensitive data), so public is safe.
+    this.app.acl.allow('urlTrigger', 'configs', 'public');
     this.app.acl.allow('urlTrigger', 'check', 'loggedIn');
     this.app.acl.allow('urlTrigger', 'status', 'loggedIn');
   }
